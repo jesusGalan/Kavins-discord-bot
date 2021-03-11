@@ -6,5 +6,5 @@ module.exports.run = async(message) => {
 module.exports.help = {
     name: "ping",
     description: "Mide el tiempo de respuesta del servidor.",
-    usage: "usage: $ping"
+    usage: "$ping"
 }

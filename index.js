@@ -1,5 +1,3 @@
-const fs = require("fs");
-
 const Discord = require("discord.js");
 const config = require("./config.json");
 
@@ -8,7 +6,7 @@ const client = new Discord.Client();
 const prefix = "$";
 
 client.on("message", function(message) {
-    if (message.author.bot) return; // Si el que habla es un bot deja de procesar el comando
+    if (message.author.bot) return; // If the message is from a bot stop running commands
     if (!message.content.startsWith(prefix)) return;
 
     if (message.channel.id == '818913982609752064') {
@@ -16,46 +14,20 @@ client.on("message", function(message) {
         const args = commandBody.split(' ');
         const command = args.shift().toLowerCase();
 
-        if (command === "help") {
-            fs.readdir("./cmds/", (err, files) => {
-                if(err) console.error(err);
-
-                let jsfiles = files.filter(f => f.split(".").pop() === "js");
-                if(jsfiles.length <= 0) {
-                    console.log("No commands to load!");
-                    return;
-                }
-                var namelist = "";
-                var desclist = "";
-                var usage = "";
-
-                console.log(jsfiles)
-
-                let result = jsfiles.forEach((f, i) => {
-                    let props = require(`./cmds/${f}`);
-                    namelist = props.help.name;
-                    desclist = props.help.description;
-                    usage = props.help.usage;
-
-                    message.author.send(`**${namelist}** \n${desclist} \n${usage}`);
+        let _command = require(`./cmds/${command}.js`);
+        switch (command) {
+            case "help":
+                const fs = require("fs");
+                fs.readdir("./cmds", (err, files) => {
+                    _command.run(message, err, files);
                 });
-
-
-            });
-        }
-
-        if (command === "hola") {
-            let _command = require(`./cmds/${command}.js`);
-            _command.run(message)
-        }
-
-        if (command === "ping") {
-            let _command = require(`./cmds/${command}.js`);
-            _command.run(message)
-        }
-        else if (command === "sum") {
-            let _command = require(`./cmds/${command}.js`);
-            _command.run(message, args)
+                break;
+            case "sum":
+                _command.run(message, args);
+                break;
+            default:
+                _command.run(message);
+                break;
         }
     }
 });
