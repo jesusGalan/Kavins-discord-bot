@@ -1,26 +1,36 @@
-module.exports.run = (message, err, files) => {
-    if(err) console.error(err);
+const { readdir } = require("fs/promises");
 
-    let jsfiles = files.filter(f => f.split(".").pop() === "js");
-    if(jsfiles.length <= 0) {
-        return;
+const help = {
+  name: "$help",
+  description: "Reenvia la lista de comandos posibles.",
+};
+
+const run = async (message, args) => {
+  const commandName = args[0];
+  const fileNames = await readdir(__dirname);
+  const commandHelps = await fileNames
+    .filter((fileName) => fileName !== __filename.slice(__dirname.length + 1))
+    .reduce((acc, fileName) => {
+      const props = require(`./${fileName}`);
+      return [...acc, props.help];
+    }, []);
+
+  const genericHelpMessage = `Puedes usar "$help [comando a usar]". Los comandos son los siguientes: ${commandHelps
+    .map(({ name }) => `\n - $${name}`)
+    .join("")}`;
+  try {
+    const searchedCommand = commandHelps.find(
+      ({ name }) => name === commandName
+    );
+
+    if (commandName == null) {
+      return await message.reply(genericHelpMessage);
     }
-    let namelist = "";
-    let desclist = "";
-    let usage = "";
 
-    let result = jsfiles.forEach((f, i) => {
-        let props = require(`./${f}`);
-        namelist = props.help.name;
-        desclist = props.help.description;
-        usage = props.help.usage;
+    return await message.reply(
+      `${searchedCommand.name}: ${searchedCommand.description}`
+    );
+  } catch (_) {}
+};
 
-        message.author.send(`**${namelist}** \n${desclist} \nusage: ${usage}`);
-    });
-}
-
-module.exports.help = {
-    name: "help",
-    description: "Reenvia la lista de comandos posibles.",
-    usage: "$help"
-}
+module.exports = { help, run };
